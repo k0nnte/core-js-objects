@@ -206,7 +206,7 @@ function sellTickets(queue) {
 function Rectangle(width, height) {
   this.width = width;
   this.height = height;
-  this.getArea = function () {
+  this.getArea = () => {
     return this.width * this.height;
   };
 }
@@ -375,33 +375,130 @@ function group(array, keySelector, valueSelector) {
  *  For more examples see unit tests.
  */
 
+class CssSelectorBuilder {
+  constructor() {
+    this.mesto = 0;
+    this.Elelement = ``;
+    this.Elid = ``;
+    this.Elclass = [];
+    this.ElpseudoClass = [];
+    this.ElpseudoElement = ``;
+    this.Elattr = [];
+  }
+
+  check(mesto) {
+    if (mesto < this.mesto) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    }
+    this.mesto = mesto;
+  }
+
+  id(str) {
+    this.check(2);
+    if (this.Elid) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector'
+      );
+    }
+    this.Elid = str;
+    return this;
+  }
+
+  element(str) {
+    this.check(1);
+    if (this.Elelement) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector'
+      );
+    }
+    this.Elelement = str;
+
+    return this;
+  }
+
+  class(str) {
+    this.check(3);
+    this.Elclass.push(str);
+    return this;
+  }
+
+  pseudoClass(str) {
+    this.check(5);
+    this.ElpseudoClass.push(str);
+    return this;
+  }
+
+  pseudoElement(str) {
+    this.check(6);
+    if (this.ElpseudoElement) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector'
+      );
+    }
+    this.ElpseudoElement = str;
+    return this;
+  }
+
+  attr(str) {
+    this.check(4);
+    this.Elattr.push(str);
+    return this;
+  }
+
+  stringify() {
+    let rez = this.Elelement;
+    if (this.Elid) {
+      rez += `#${this.Elid}`;
+    }
+    if (this.Elclass.length) {
+      rez += `.${this.Elclass.join(`.`)}`;
+    }
+    if (this.Elattr.length) {
+      rez += `[${this.Elattr.join(`][`)}]`;
+    }
+    if (this.ElpseudoClass.length) {
+      rez += `:${this.ElpseudoClass.join(`:`)}`;
+    }
+    if (this.ElpseudoElement) {
+      rez += `::${this.ElpseudoElement}`;
+    }
+    return rez;
+  }
+}
+
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  element(value) {
+    return new CssSelectorBuilder().element(value);
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    return new CssSelectorBuilder().id(value);
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    return new CssSelectorBuilder().class(value);
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    return new CssSelectorBuilder().attr(value);
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    return new CssSelectorBuilder().pseudoClass(value);
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    return new CssSelectorBuilder().pseudoElement(value);
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    return {
+      stringify() {
+        return `${selector1.stringify()} ${combinator} ${selector2.stringify()}`;
+      },
+    };
   },
 };
 
